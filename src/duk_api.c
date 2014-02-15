@@ -1194,6 +1194,7 @@ void duk_get_multiple(duk_context *ctx, int start_index, const char *types, ...)
 	for (;;) {
 		unsigned int ch = (unsigned int) (*p++);
 		switch (ch) {
+		/* FIXME: should these be native charvalues? */
 		case 'u': {
 			/* no effect */
 			break;
@@ -2423,6 +2424,7 @@ void duk_push_multiple(duk_context *ctx, const char *types, ...) {
 	for (;;) {
 		unsigned int ch = (unsigned int) (*p++);
 		switch (ch) {
+		/* FIXME: should these be native charvalues? */
 		case 'u': {
 			(void) duk_push_undefined(ctx);
 			break;
