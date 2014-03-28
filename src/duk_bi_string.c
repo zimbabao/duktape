@@ -105,34 +105,19 @@ duk_ret_t duk_bi_string_prototype_to_string(duk_context *ctx) {
 
 /*
  *  Character and charcode access
+ *
+ *  Magic: 0 = charAt
+ *         1 = charCodeAt
  */
 
-/* FIXME: charAt() and charCodeAt() could probably use a shared helper. */
-
-duk_ret_t duk_bi_string_prototype_char_at(duk_context *ctx) {
-	duk_int_t pos;  /* FIXME: type, duk_to_int() needs to be fixed */
-
-	/* FIXME: faster implementation */
-	/* FIXME: handling int values outside C int range, currently
-	 * duk_to_int() coerces to min/max int, so this works passably.
-	 */
-
-	(void) duk_push_this_coercible_to_string(ctx);
-	pos = duk_to_int(ctx, 0);
-	duk_substring(ctx, -1, pos, pos + 1);
-	return 1;
-}
-
-duk_ret_t duk_bi_string_prototype_char_code_at(duk_context *ctx) {
+duk_ret_t duk_bi_string_prototype_char_at_shared(duk_context *ctx) {
 	duk_hthread *thr = (duk_hthread *) ctx;
 	duk_int_t pos;  /* FIXME: type, duk_to_int() needs to be fixed */
 	duk_uint32_t boff;
 	duk_hstring *h;
-	duk_uint8_t *p, *p_start, *p_end;
+	duk_uint8_t *p, *p_start_sub, *p_start, *p_end;
 	duk_ucodepoint_t cp;
 	int clamped;  /* FIXME: type */
-
-	/* FIXME: faster implementation */
 
 	DUK_DDDPRINT("arg=%!T", duk_get_tval(ctx, 0));
 
@@ -145,23 +130,32 @@ duk_ret_t duk_bi_string_prototype_char_code_at(duk_context *ctx) {
 	                             DUK_HSTRING_GET_CHARLEN(h) - 1 /*max(incl)*/,
 	                             &clamped /*clamped*/);
 	if (clamped) {
-		duk_push_number(ctx, DUK_DOUBLE_NAN);
+		if (duk_get_magic(ctx) != 0) {
+			duk_push_number(ctx, DUK_DOUBLE_NAN);
+		} else {
+			duk_push_hstring_stridx(ctx, DUK_STRIDX_EMPTY_STRING);
+		}
 		return 1;
 	}
 
 	boff = duk_heap_strcache_offset_char2byte(thr, h, (duk_uint32_t) pos);
-	DUK_DDDPRINT("charCodeAt: pos=%d -> boff=%d, str=%!O", pos, boff, h);
+	DUK_DDDPRINT("charCodeAt: pos=%d -> boff=%d, str=%!O", (int) pos, (int) boff, h);
 	DUK_ASSERT_DISABLE(boff >= 0);
 	DUK_ASSERT(boff < DUK_HSTRING_GET_BYTELEN(h));
 	p_start = DUK_HSTRING_GET_DATA(h);
 	p_end = p_start + DUK_HSTRING_GET_BYTELEN(h);
 	p = p_start + boff;
+	p_start_sub = p;
 	DUK_DDDPRINT("p_start=%p, p_end=%p, p=%p", (void *) p_start, (void *) p_end, (void *) p);
 
-	/* This may throw an error though not for valid E5 strings. */
+	/* This may throw an error, though not for valid E5 strings. */
 	cp = duk_unicode_decode_xutf8_checked(thr, &p, p_start, p_end);
 
-	duk_push_u32(ctx, (duk_uint32_t) cp);
+	if (duk_get_magic(ctx) != 0) {
+		duk_push_u32(ctx, (duk_uint32_t) cp);
+	} else {
+		duk_push_lstring(ctx, (const char *) p_start_sub, (size_t) (p - p_start_sub));
+	}
 	return 1;
 }
 

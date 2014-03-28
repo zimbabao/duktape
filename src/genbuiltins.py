@@ -488,8 +488,8 @@ bi_string_prototype = {
 	'functions': [
 		{ 'name': 'toString',			'native': 'duk_bi_string_prototype_to_string',		'length': 0 },
 		{ 'name': 'valueOf',			'native': 'duk_bi_string_prototype_to_string',		'length': 0 },  # share native function, behavior is identical
-		{ 'name': 'charAt',			'native': 'duk_bi_string_prototype_char_at',		'length': 1 },
-		{ 'name': 'charCodeAt',			'native': 'duk_bi_string_prototype_char_code_at',	'length': 1 },
+		{ 'name': 'charAt',			'native': 'duk_bi_string_prototype_char_at_shared',	'length': 1,	'magic': { 'type': 'plain', 'value': 0 } },
+		{ 'name': 'charCodeAt',			'native': 'duk_bi_string_prototype_char_at_shared',	'length': 1,	'magic': { 'type': 'plain', 'value': 1 } },
 		{ 'name': 'concat',			'native': 'duk_bi_string_prototype_concat',		'length': 1,	'varargs': True },
 		{ 'name': 'indexOf',			'native': 'duk_bi_string_prototype_indexof_shared',	'length': 1,	'nargs': 2,	'magic': { 'type': 'plain', 'value': 0 } },  # magic = 0 -> indexOf
 		{ 'name': 'lastIndexOf',		'native': 'duk_bi_string_prototype_indexof_shared',	'length': 1,	'nargs': 2,	'magic': { 'type': 'plain', 'value': 1 } },  # magic = 1 -> lastIndexOf
